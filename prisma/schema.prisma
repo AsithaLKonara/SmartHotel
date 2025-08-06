@@ -10,141 +10,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  password      String
-  role          UserRole  @default(GUEST)
-  phone         String?
-  address       String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  bookings      Booking[]
-  staff         Staff?
-  tasks         Task[]
-}
-
-model Staff {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  position  String
-  shift     String?
-  salary    Float?
-  hireDate  DateTime @default(now())
-  isActive  Boolean  @default(true)
-  tasks     Task[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Room {
-  id          String   @id @default(cuid())
-  number      String   @unique
-  type        RoomType
-  capacity    Int
-  price       Float
-  description String?
-  amenities   String[]
-  images      String[]
-  isAvailable Boolean  @default(true)
-  floor       Int?
-  size        Int? // in square meters
-  bookings    Booking[]
-  tasks       Task[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Booking {
-  id            String        @id @default(cuid())
-  userId        String
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  roomId        String
-  room          Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  checkIn       DateTime
-  checkOut      DateTime
-  guests        Int
-  totalAmount   Float
-  status        BookingStatus @default(PENDING)
-  paymentStatus PaymentStatus @default(PENDING)
-  paymentMethod String?
-  specialRequests String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  invoice       Invoice?
-}
-
-model Invoice {
-  id        String   @id @default(cuid())
-  bookingId String   @unique
-  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  amount    Float
-  tax       Float
-  total     Float
-  items     Json[]   // Array of items with name, quantity, price
-  issuedAt  DateTime @default(now())
-  dueDate   DateTime
-  status    InvoiceStatus @default(UNPAID)
-  pdfUrl    String?
-}
-
-model Task {
-  id          String     @id @default(cuid())
-  title       String
-  description String?
-  roomId      String?
-  room        Room?      @relation(fields: [roomId], references: [id], onDelete: SetNull)
-  assignedTo  String?
-  staff       Staff?     @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
-  createdBy   String?
-  user        User?      @relation(fields: [createdBy], references: [id], onDelete: SetNull)
-  status      TaskStatus @default(PENDING)
-  priority    Priority   @default(MEDIUM)
-  dueDate     DateTime?
-  completedAt DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-}
-
-model Inventory {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  quantity    Int
-  unit        String
-  minQuantity Int      @default(0)
-  price       Float?
-  supplier    String?
-  location    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Gallery {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  imageUrl    String
-  category    String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Setting {
-  id    String @id @default(cuid())
-  key   String @unique
-  value String
-}
-
 enum UserRole {
   SUPER_ADMIN
   MANAGER
   RECEPTIONIST
-  HOUSEKEEPING
   GUEST
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+  CLEANING
 }
 
 enum RoomType {
@@ -167,6 +44,7 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+  PARTIAL
 }
 
 enum TaskStatus {
@@ -176,16 +54,187 @@ enum TaskStatus {
   CANCELLED
 }
 
-enum Priority {
+enum TaskPriority {
   LOW
   MEDIUM
   HIGH
   URGENT
 }
 
-enum InvoiceStatus {
-  UNPAID
-  PAID
-  OVERDUE
-  CANCELLED
+enum TaskType {
+  HOUSEKEEPING
+  MAINTENANCE
+  ROOM_SERVICE
+  CONCIERGE
+  OTHER
+}
+
+enum InventoryStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  ORDERED
+}
+
+enum GalleryCategory {
+  ROOMS
+  FACILITIES
+  EVENTS
+  FOOD
+  EXTERIOR
+  INTERIOR
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  phone     String?
+  address   String?
+  role      UserRole @default(GUEST)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  bookings  Booking[]
+  tasks     Task[]
+  auditLogs AuditLog[] // Track user actions
+}
+
+model Staff {
+  id          String   @id @default(cuid())
+  employeeId  String   @unique
+  name        String
+  email       String   @unique
+  phone       String
+  position    String
+  department  String
+  hireDate    DateTime
+  salary      Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  tasks Task[]
+}
+
+model Room {
+  id          String     @id @default(cuid())
+  number      String     @unique
+  type        RoomType
+  capacity    Int
+  price       Float
+  description String?
+  amenities   String[]
+  status      RoomStatus @default(AVAILABLE)
+  floor       Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  bookings Booking[]
+}
+
+model Booking {
+  id              String        @id @default(cuid())
+  roomId          String
+  userId          String
+  checkIn         DateTime
+  checkOut        DateTime
+  guests          Int
+  totalAmount     Float
+  status          BookingStatus @default(PENDING)
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentIntentId String?       // Stripe payment intent ID
+  specialRequests String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relations
+  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invoice Invoice?
+}
+
+model Invoice {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  amount    Float
+  tax       Float
+  total     Float
+  status    PaymentStatus @default(PENDING)
+  dueDate   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  type        TaskType
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(PENDING)
+  assignedTo  String?
+  createdBy   String?
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  staff Staff? @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+  user  User?  @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+}
+
+model Inventory {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  category    String
+  quantity    Int
+  unit        String
+  price       Float
+  status      InventoryStatus @default(IN_STOCK)
+  minStock    Int            @default(0)
+  supplier    String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Gallery {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String
+  category    GalleryCategory
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String   // e.g., "CREATE_BOOKING", "UPDATE_ROOM", "DELETE_USER"
+  resource  String   // e.g., "Booking", "Room", "User"
+  resourceId String? // ID of the affected resource
+  details   String?  // JSON string with additional details
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 } 

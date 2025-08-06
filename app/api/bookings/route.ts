@@ -3,81 +3,70 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/db'
 import { z } from 'zod'
+import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit'
+import { logAction, AUDIT_ACTIONS } from '@/lib/audit'
+import Stripe from 'stripe'
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16',
+})
 
 const bookingSchema = z.object({
   roomId: z.string().min(1, 'Room ID is required'),
   checkIn: z.string().datetime(),
   checkOut: z.string().datetime(),
-  guests: z.number().min(1, 'At least 1 guest required'),
-  totalAmount: z.number().min(0, 'Total amount must be non-negative'),
-  paymentMethod: z.string().optional(),
+  guests: z.number().min(1).max(10),
   specialRequests: z.string().optional(),
+  paymentMethod: z.enum(['pay_now', 'pay_later']).default('pay_later'),
 })
 
 export async function GET(request: NextRequest) {
+  // Rate limiting
+  const rateLimitResult = rateLimit(request, 'api')
+  if (!rateLimitResult.allowed) {
+    return createRateLimitResponse(rateLimitResult.remaining, rateLimitResult.resetTime)
+  }
+
+  const session = await getServerSession(authOptions)
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
-    const session = await getServerSession(authOptions)
     const { searchParams } = new URL(request.url)
-    
     const status = searchParams.get('status')
     const userId = searchParams.get('userId')
-    const roomId = searchParams.get('roomId')
-    const startDate = searchParams.get('startDate')
-    const endDate = searchParams.get('endDate')
 
-    const where: any = {}
+    let whereClause: any = {}
 
-    // Filter by user role
-    if (session?.user.role === 'GUEST') {
-      where.userId = session.user.id
-    } else if (userId) {
-      where.userId = userId
-    }
-
+    // Filter by status if provided
     if (status && status !== 'all') {
-      where.status = status
+      whereClause.status = status
     }
 
-    if (roomId) {
-      where.roomId = roomId
-    }
-
-    if (startDate || endDate) {
-      where.OR = []
-      if (startDate) {
-        where.OR.push({
-          checkIn: { gte: new Date(startDate) }
-        })
-      }
-      if (endDate) {
-        where.OR.push({
-          checkOut: { lte: new Date(endDate) }
-        })
-      }
+    // Filter by user if provided (or if user is not admin)
+    if (userId) {
+      whereClause.userId = userId
+    } else if (session.user.role === 'GUEST') {
+      whereClause.userId = session.user.id
     }
 
     const bookings = await prisma.booking.findMany({
-      where,
+      where: whereClause,
       include: {
+        room: true,
         user: {
           select: {
             id: true,
             name: true,
             email: true,
-            phone: true,
-          }
-        },
-        room: {
-          select: {
-            id: true,
-            number: true,
-            type: true,
-            price: true,
           }
         },
         invoice: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: {
+        createdAt: 'desc'
+      }
     })
 
     return NextResponse.json(bookings)
@@ -91,16 +80,18 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
+  // Rate limiting for booking creation
+  const rateLimitResult = rateLimit(request, 'booking')
+  if (!rateLimitResult.allowed) {
+    return createRateLimitResponse(rateLimitResult.remaining, rateLimitResult.resetTime)
+  }
 
+  const session = await getServerSession(authOptions)
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
     const body = await request.json()
     const validatedData = bookingSchema.parse(body)
 
@@ -116,7 +107,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!room.isAvailable) {
+    if (room.status !== 'AVAILABLE') {
       return NextResponse.json(
         { error: 'Room is not available' },
         { status: 400 }
@@ -128,12 +119,16 @@ export async function POST(request: NextRequest) {
       where: {
         roomId: validatedData.roomId,
         status: {
-          in: ['CONFIRMED', 'CHECKED_IN']
+          in: ['PENDING', 'CONFIRMED', 'CHECKED_IN']
         },
         OR: [
           {
-            checkIn: { lt: new Date(validatedData.checkOut) },
-            checkOut: { gt: new Date(validatedData.checkIn) }
+            checkIn: {
+              lt: new Date(validatedData.checkOut)
+            },
+            checkOut: {
+              gt: new Date(validatedData.checkIn)
+            }
           }
         ]
       }
@@ -146,43 +141,100 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Calculate total amount if not provided
-    let totalAmount = validatedData.totalAmount
-    if (!totalAmount) {
-      const checkIn = new Date(validatedData.checkIn)
-      const checkOut = new Date(validatedData.checkOut)
-      const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
-      totalAmount = room.price * nights
-    }
+    // Calculate total amount
+    const checkIn = new Date(validatedData.checkIn)
+    const checkOut = new Date(validatedData.checkOut)
+    const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
+    const totalAmount = room.price * nights
 
+    // Create booking
     const booking = await prisma.booking.create({
       data: {
-        ...validatedData,
+        roomId: validatedData.roomId,
         userId: session.user.id,
+        checkIn,
+        checkOut,
+        guests: validatedData.guests,
         totalAmount,
-        checkIn: new Date(validatedData.checkIn),
-        checkOut: new Date(validatedData.checkOut),
+        specialRequests: validatedData.specialRequests,
+        status: 'PENDING',
+        paymentStatus: validatedData.paymentMethod === 'pay_now' ? 'PENDING' : 'PENDING',
       },
       include: {
+        room: true,
         user: {
           select: {
             id: true,
             name: true,
             email: true,
           }
-        },
-        room: {
-          select: {
-            id: true,
-            number: true,
-            type: true,
-            price: true,
-          }
-        },
+        }
       }
     })
 
-    return NextResponse.json(booking, { status: 201 })
+    // Create invoice
+    const tax = totalAmount * 0.1 // 10% tax
+    const invoice = await prisma.invoice.create({
+      data: {
+        bookingId: booking.id,
+        amount: totalAmount,
+        tax,
+        total: totalAmount + tax,
+        dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+        status: 'PENDING',
+      }
+    })
+
+    // If pay now, create Stripe payment intent
+    let paymentIntent = null
+    if (validatedData.paymentMethod === 'pay_now') {
+      paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round((totalAmount + tax) * 100), // Convert to cents
+        currency: 'usd',
+        metadata: {
+          bookingId: booking.id,
+          roomId: room.id,
+          userId: session.user.id,
+        },
+        description: `Booking for Room ${room.number} - ${nights} nights`,
+      })
+
+      // Update booking with payment intent ID
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { paymentIntentId: paymentIntent.id }
+      })
+    }
+
+    // Log the action
+    await logAction(
+      request,
+      session.user.id,
+      AUDIT_ACTIONS.BOOKING_CREATE,
+      'Booking',
+      booking.id,
+      {
+        roomId: room.id,
+        roomNumber: room.number,
+        checkIn: validatedData.checkIn,
+        checkOut: validatedData.checkOut,
+        guests: validatedData.guests,
+        totalAmount,
+        paymentMethod: validatedData.paymentMethod,
+      }
+    )
+
+    return NextResponse.json({
+      booking: {
+        ...booking,
+        invoice,
+        paymentIntent: paymentIntent ? {
+          id: paymentIntent.id,
+          clientSecret: paymentIntent.client_secret,
+        } : null,
+      }
+    }, { status: 201 })
+
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

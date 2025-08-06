@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { useSession, signOut } from 'next-auth/react'
-import { Menu, X, Sun, Moon, Building2, User, LogOut } from 'lucide-react'
+import { Menu, X, Sun, Moon, Building2, User, LogOut, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function Navigation() {
@@ -61,6 +61,9 @@ export default function Navigation() {
             {/* Authentication & Actions */}
             {session ? (
               <div className="hidden sm:flex items-center space-x-2">
+                <Button variant="outline" asChild>
+                  <Link href="/my-bookings">My Bookings</Link>
+                </Button>
                 {session.user.role !== 'GUEST' && (
                   <Button variant="outline" asChild>
                     <Link href="/admin">Admin Panel</Link>
@@ -112,22 +115,28 @@ export default function Navigation() {
                   {item.name}
                 </Link>
               ))}
-              {session ? (
-                <div className="px-3 py-2 space-y-2">
-                  {session.user.role !== 'GUEST' && (
-                    <Link href="/admin" className="w-full">
-                      <Button variant="outline" className="w-full">
-                        <User className="h-4 w-4 mr-2" />
-                        Admin Panel
-                      </Button>
-                    </Link>
-                  )}
-                  <Button variant="outline" className="w-full" onClick={() => signOut()}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </Button>
-                </div>
-              ) : (
+                                        {session ? (
+                            <div className="px-3 py-2 space-y-2">
+                              <Link href="/my-bookings" className="w-full">
+                                <Button variant="outline" className="w-full">
+                                  <Calendar className="h-4 w-4 mr-2" />
+                                  My Bookings
+                                </Button>
+                              </Link>
+                              {session.user.role !== 'GUEST' && (
+                                <Link href="/admin" className="w-full">
+                                  <Button variant="outline" className="w-full">
+                                    <User className="h-4 w-4 mr-2" />
+                                    Admin Panel
+                                  </Button>
+                                </Link>
+                              )}
+                              <Button variant="outline" className="w-full" onClick={() => signOut()}>
+                                <LogOut className="h-4 w-4 mr-2" />
+                                Sign Out
+                              </Button>
+                            </div>
+                          ) : (
                 <div className="px-3 py-2 space-y-2">
                   <Link href="/auth/signin" className="w-full">
                     <Button variant="outline" className="w-full">Sign In</Button>

@@ -8,10 +8,26 @@ A modern, full-stack hotel management system with a beautiful portfolio website 
 - **Responsive Design** - Works perfectly on all devices
 - **Modern UI/UX** - Clean, luxury-focused design with dark/light mode
 - **Room Showcase** - Detailed room listings with filters and search
-- **Booking System** - Multi-step booking process with payment integration
+- **Booking System** - Multi-step booking process with Stripe payment integration
+- **Guest Portal** - "My Bookings" page for guests to manage reservations
 - **Gallery** - Beautiful image galleries with lightbox
 - **Contact Forms** - Easy communication with guests
 - **SEO Optimized** - Built for search engine visibility
+
+### 🔒 Security & Access Control
+- **Rate Limiting** - Protection against API abuse and brute force attacks
+- **Audit Logging** - Comprehensive tracking of all user actions
+- **HTTPS-Only Cookies** - Secure session management in production
+- **Input Sanitization** - XSS/SQL injection protection via Prisma + Zod
+- **JWT Session Rotation** - Enhanced session security with automatic rotation
+- **Role-Based Permissions** - Granular access control for different user roles
+
+### 💳 Payment Integration
+- **Stripe Checkout** - Secure online payment processing
+- **Pay Now/Pay Later** - Flexible payment options for guests
+- **Webhook Support** - Real-time payment status updates
+- **Invoice Generation** - Automated billing and receipt system
+- **Payment Tracking** - Complete payment history and status management
 
 ### 🛎️ Admin Management System
 - **Dashboard Overview** - Real-time analytics and insights
@@ -69,9 +85,10 @@ DATABASE_URL="postgresql://username:password@localhost:5432/smarthotel"
 NEXTAUTH_SECRET="your-secret-key-here"
 NEXTAUTH_URL="http://localhost:3000"
 
-# Stripe (Optional)
+# Stripe (Required for payments)
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_PUBLISHABLE_KEY="pk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
 
 # Email (Optional)
 SMTP_HOST="smtp.gmail.com"
@@ -83,6 +100,15 @@ SMTP_PASS="your-app-password"
 CLOUDINARY_CLOUD_NAME="your-cloud-name"
 CLOUDINARY_API_KEY="your-api-key"
 CLOUDINARY_API_SECRET="your-api-secret"
+
+# Security
+RATE_LIMIT_ENABLED="true"
+MAX_LOGIN_ATTEMPTS="5"
+LOGIN_TIMEOUT_MINUTES="15"
+
+# Monitoring (Optional)
+SENTRY_DSN="your-sentry-dsn"
+CRONITOR_API_KEY="your-cronitor-key"
 ```
 
 ### 4. Set up the database

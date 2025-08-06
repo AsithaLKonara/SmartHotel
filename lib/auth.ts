@@ -18,11 +18,7 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          }
-        })
+        const user = await prisma.user.findUnique({ email: credentials.email })
 
         if (!user) {
           return null
@@ -43,28 +39,62 @@ export const authOptions: NextAuthOptions = {
       }
     })
   ],
-  session: {
-    strategy: 'jwt'
+  session: { 
+    strategy: 'jwt',
+    maxAge: 24 * 60 * 60, // 24 hours
+    updateAge: 60 * 60, // 1 hour
+  },
+  jwt: {
+    maxAge: 24 * 60 * 60, // 24 hours
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role
         token.id = user.id
+        token.role = user.role
       }
       return token
     },
     async session({ session, token }) {
       if (token) {
-        session.user.role = token.role
-        session.user.id = token.id
+        session.user.id = token.id as string
+        session.user.role = token.role as any
       }
       return session
     }
   },
-  pages: {
-    signIn: '/auth/signin',
-    signUp: '/auth/signup',
+  pages: { 
+    signIn: '/auth/signin', 
+    signUp: '/auth/signup' 
   },
   secret: process.env.NEXTAUTH_SECRET,
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production', // HTTPS-only in production
+        maxAge: 24 * 60 * 60, // 24 hours
+      }
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    }
+  }
 } 

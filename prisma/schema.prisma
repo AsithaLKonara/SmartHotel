@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  role          UserRole  @default(GUEST)
+  phone         String?
+  address       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  bookings      Booking[]
+  staff         Staff?
+  tasks         Task[]
+}
+
+model Staff {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  position  String
+  shift     String?
+  salary    Float?
+  hireDate  DateTime @default(now())
+  isActive  Boolean  @default(true)
+  tasks     Task[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  type        RoomType
+  capacity    Int
+  price       Float
+  description String?
+  amenities   String[]
+  images      String[]
+  isAvailable Boolean  @default(true)
+  floor       Int?
+  size        Int? // in square meters
+  bookings    Booking[]
+  tasks       Task[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId        String
+  room          Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  checkIn       DateTime
+  checkOut      DateTime
+  guests        Int
+  totalAmount   Float
+  status        BookingStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentMethod String?
+  specialRequests String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  invoice       Invoice?
+}
+
+model Invoice {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  amount    Float
+  tax       Float
+  total     Float
+  items     Json[]   // Array of items with name, quantity, price
+  issuedAt  DateTime @default(now())
+  dueDate   DateTime
+  status    InvoiceStatus @default(UNPAID)
+  pdfUrl    String?
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  roomId      String?
+  room        Room?      @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  assignedTo  String?
+  staff       Staff?     @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+  status      TaskStatus @default(PENDING)
+  priority    Priority   @default(MEDIUM)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Inventory {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  quantity    Int
+  unit        String
+  minQuantity Int      @default(0)
+  price       Float?
+  supplier    String?
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Gallery {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String
+  category    String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  MANAGER
+  RECEPTIONIST
+  HOUSEKEEPING
+  GUEST
+}
+
+enum RoomType {
+  STANDARD
+  DELUXE
+  SUITE
+  PRESIDENTIAL
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PAID
+  OVERDUE
+  CANCELLED
+} 

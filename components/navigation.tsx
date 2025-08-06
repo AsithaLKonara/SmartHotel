@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
-import { Menu, X, Sun, Moon, Building2 } from 'lucide-react'
+import { useSession, signOut } from 'next-auth/react'
+import { Menu, X, Sun, Moon, Building2, User, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { theme, setTheme } = useTheme()
+  const { data: session } = useSession()
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -56,10 +58,29 @@ export default function Navigation() {
               <span className="sr-only">Toggle theme</span>
             </Button>
 
-            {/* Book Now Button */}
-            <Link href="/booking" className="hidden sm:block">
-              <Button className="btn-primary">Book Now</Button>
-            </Link>
+            {/* Authentication & Actions */}
+            {session ? (
+              <div className="hidden sm:flex items-center space-x-2">
+                {session.user.role !== 'GUEST' && (
+                  <Button variant="outline" asChild>
+                    <Link href="/admin">Admin Panel</Link>
+                  </Button>
+                )}
+                <Button variant="outline" onClick={() => signOut()}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <div className="hidden sm:flex items-center space-x-2">
+                <Button variant="outline" asChild>
+                  <Link href="/auth/signin">Sign In</Link>
+                </Button>
+                <Link href="/booking">
+                  <Button className="btn-primary">Book Now</Button>
+                </Link>
+              </div>
+            )}
 
             {/* Mobile Menu Button */}
             <Button
@@ -91,11 +112,31 @@ export default function Navigation() {
                   {item.name}
                 </Link>
               ))}
-              <div className="px-3 py-2">
-                <Link href="/booking" className="w-full">
-                  <Button className="w-full btn-primary">Book Now</Button>
-                </Link>
-              </div>
+              {session ? (
+                <div className="px-3 py-2 space-y-2">
+                  {session.user.role !== 'GUEST' && (
+                    <Link href="/admin" className="w-full">
+                      <Button variant="outline" className="w-full">
+                        <User className="h-4 w-4 mr-2" />
+                        Admin Panel
+                      </Button>
+                    </Link>
+                  )}
+                  <Button variant="outline" className="w-full" onClick={() => signOut()}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="px-3 py-2 space-y-2">
+                  <Link href="/auth/signin" className="w-full">
+                    <Button variant="outline" className="w-full">Sign In</Button>
+                  </Link>
+                  <Link href="/booking" className="w-full">
+                    <Button className="w-full btn-primary">Book Now</Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}

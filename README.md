@@ -56,12 +56,11 @@ npm install
 ```
 
 ### 3. Set up environment variables
-Copy the example environment file and configure your variables:
 ```bash
 cp env.example .env.local
 ```
 
-Fill in your environment variables:
+Edit `.env.local` and add your configuration:
 ```env
 # Database
 DATABASE_URL="postgresql://username:password@localhost:5432/smarthotel"
@@ -79,6 +78,11 @@ SMTP_HOST="smtp.gmail.com"
 SMTP_PORT="587"
 SMTP_USER="your-email@gmail.com"
 SMTP_PASS="your-app-password"
+
+# Cloudinary (Optional for image uploads)
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
 ```
 
 ### 4. Set up the database
@@ -89,8 +93,8 @@ npm run db:generate
 # Push schema to database
 npm run db:push
 
-# (Optional) Open Prisma Studio
-npm run db:studio
+# Seed database with sample data
+npm run db:seed
 ```
 
 ### 5. Run the development server
@@ -100,24 +104,55 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the website.
 
+### 6. Access Admin Panel
+Visit [http://localhost:3000/admin](http://localhost:3000/admin) and use these credentials:
+
+- **Super Admin**: admin@smarthotel.com / admin123
+- **Manager**: manager@smarthotel.com / manager123  
+- **Receptionist**: receptionist@smarthotel.com / receptionist123
+- **Guest**: guest@example.com / guest123
+
 ## 📁 Project Structure
 
 ```
 smarthotel/
 ├── app/                    # Next.js app directory
 │   ├── admin/             # Admin dashboard pages
-│   ├── booking/           # Booking system
-│   ├── rooms/             # Room listings
+│   │   ├── layout.tsx     # Admin layout with sidebar
+│   │   ├── page.tsx       # Dashboard overview
+│   │   ├── rooms/         # Room management
+│   │   └── bookings/      # Booking management
+│   ├── auth/              # Authentication pages
+│   │   ├── signin/        # Sign in page
+│   │   └── signup/        # Sign up page
+│   ├── api/               # API routes
+│   │   ├── auth/          # Authentication API
+│   │   ├── rooms/         # Room management API
+│   │   └── bookings/      # Booking management API
+│   ├── booking/           # Public booking system
+│   ├── rooms/             # Public room listings
+│   ├── gallery/           # Hotel gallery
+│   ├── contact/           # Contact page
 │   ├── globals.css        # Global styles
 │   └── layout.tsx         # Root layout
 ├── components/            # Reusable components
-│   ├── ui/               # UI components (Button, Card, etc.)
-│   └── navigation.tsx    # Navigation component
+│   ├── ui/               # UI components (Button, Card, Badge, etc.)
+│   ├── navigation.tsx    # Main navigation
+│   ├── theme-provider.tsx # Theme management
+│   └── protected-route.tsx # Route protection
 ├── lib/                  # Utility functions
-├── prisma/               # Database schema and migrations
-├── public/               # Static assets
-└── types/                # TypeScript type definitions
+│   ├── db.ts            # Database connection
+│   ├── auth.ts          # Authentication config
+│   └── utils.ts         # Utility functions
+├── prisma/              # Database schema and migrations
+│   ├── schema.prisma    # Database schema
+│   └── seed.ts          # Database seeding
+├── types/               # TypeScript type definitions
+│   └── next-auth.d.ts   # NextAuth type extensions
+└── public/              # Static assets
 ```
+
+
 
 ## 🎨 Customization
 

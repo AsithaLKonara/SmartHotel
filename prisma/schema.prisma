@@ -98,6 +98,8 @@ model Task {
   room        Room?      @relation(fields: [roomId], references: [id], onDelete: SetNull)
   assignedTo  String?
   staff       Staff?     @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+  createdBy   String?
+  user        User?      @relation(fields: [createdBy], references: [id], onDelete: SetNull)
   status      TaskStatus @default(PENDING)
   priority    Priority   @default(MEDIUM)
   dueDate     DateTime?

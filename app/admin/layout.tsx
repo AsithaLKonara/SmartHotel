@@ -17,7 +17,10 @@ import {
   LogOut,
   Menu,
   X,
-  Building2
+  Building2,
+  CheckSquare,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -27,6 +30,9 @@ const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Rooms', href: '/admin/rooms', icon: Bed },
   { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
+  { name: 'Calendar View', href: '/admin/calendar', icon: Calendar },
+  { name: 'Check-in/Check-out', href: '/admin/dashboard/checkin-checkout', icon: ArrowRight },
+  { name: 'Tasks', href: '/admin/tasks', icon: CheckSquare },
   { name: 'Guests', href: '/admin/guests', icon: Users },
   { name: 'Staff', href: '/admin/staff', icon: Users },
   { name: 'Housekeeping', href: '/admin/housekeeping', icon: ClipboardList },

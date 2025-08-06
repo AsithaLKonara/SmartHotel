@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit'
 import { logAction, AUDIT_ACTIONS } from '@/lib/audit'
 import Stripe from 'stripe'
+import { sendBookingConfirmation, sendAdminBookingAlert } from '@/lib/email'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2023-10-16',
@@ -206,34 +207,64 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Log the action
-    await logAction(
-      request,
-      session.user.id,
-      AUDIT_ACTIONS.BOOKING_CREATE,
-      'Booking',
-      booking.id,
-      {
-        roomId: room.id,
-        roomNumber: room.number,
-        checkIn: validatedData.checkIn,
-        checkOut: validatedData.checkOut,
-        guests: validatedData.guests,
-        totalAmount,
-        paymentMethod: validatedData.paymentMethod,
-      }
-    )
+                    // Send email notifications
+                try {
+                  // Send booking confirmation to guest
+                  await sendBookingConfirmation({
+                    guestName: session.user.name || 'Guest',
+                    guestEmail: session.user.email!,
+                    roomNumber: room.number,
+                    roomType: room.type,
+                    checkIn,
+                    checkOut,
+                    guests: validatedData.guests,
+                    totalAmount,
+                    bookingId: booking.id,
+                    specialRequests: validatedData.specialRequests,
+                  })
 
-    return NextResponse.json({
-      booking: {
-        ...booking,
-        invoice,
-        paymentIntent: paymentIntent ? {
-          id: paymentIntent.id,
-          clientSecret: paymentIntent.client_secret,
-        } : null,
-      }
-    }, { status: 201 })
+                  // Send admin alert
+                  await sendAdminBookingAlert({
+                    bookingId: booking.id,
+                    guestName: session.user.name || 'Guest',
+                    roomNumber: room.number,
+                    checkIn,
+                    checkOut,
+                    totalAmount,
+                  })
+                } catch (emailError) {
+                  console.error('Failed to send email notifications:', emailError)
+                  // Don't fail the booking if email fails
+                }
+
+                // Log the action
+                await logAction(
+                  request,
+                  session.user.id,
+                  AUDIT_ACTIONS.BOOKING_CREATE,
+                  'Booking',
+                  booking.id,
+                  {
+                    roomId: room.id,
+                    roomNumber: room.number,
+                    checkIn: validatedData.checkIn,
+                    checkOut: validatedData.checkOut,
+                    guests: validatedData.guests,
+                    totalAmount,
+                    paymentMethod: validatedData.paymentMethod,
+                  }
+                )
+
+                return NextResponse.json({
+                  booking: {
+                    ...booking,
+                    invoice,
+                    paymentIntent: paymentIntent ? {
+                      id: paymentIntent.id,
+                      clientSecret: paymentIntent.client_secret,
+                    } : null,
+                  }
+                }, { status: 201 })
 
   } catch (error) {
     if (error instanceof z.ZodError) {

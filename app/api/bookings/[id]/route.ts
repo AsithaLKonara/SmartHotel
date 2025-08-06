@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/db'
 import { z } from 'zod'
+import { logAction, AUDIT_ACTIONS } from '@/lib/audit'
+import { sendBookingStatusUpdate } from '@/lib/email'
 
 const bookingUpdateSchema = z.object({
   status: z.enum(['PENDING', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED']).optional(),
@@ -94,7 +96,16 @@ export async function PATCH(
 
     const booking = await prisma.booking.findUnique({
       where: { id: params.id },
-      include: { room: true }
+      include: { 
+        room: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        }
+      }
     })
 
     if (!booking) {
@@ -104,17 +115,20 @@ export async function PATCH(
       )
     }
 
+    const oldStatus = booking.status
+    const oldPaymentStatus = booking.paymentStatus
+
     // Update room availability based on status change
     if (validatedData.status && validatedData.status !== booking.status) {
       if (validatedData.status === 'CHECKED_IN') {
         await prisma.room.update({
           where: { id: booking.roomId },
-          data: { isAvailable: false }
+          data: { status: 'OCCUPIED' }
         })
       } else if (validatedData.status === 'CHECKED_OUT' || validatedData.status === 'CANCELLED') {
         await prisma.room.update({
           where: { id: booking.roomId },
-          data: { isAvailable: true }
+          data: { status: 'AVAILABLE' }
         })
       }
     }
@@ -141,6 +155,38 @@ export async function PATCH(
         },
       }
     })
+
+    // Send email notifications for status changes
+    try {
+      if (validatedData.status && validatedData.status !== oldStatus) {
+        await sendBookingStatusUpdate(
+          booking.user.email,
+          booking.user.name || 'Guest',
+          booking.id,
+          booking.room.number,
+          validatedData.status,
+          booking.checkIn
+        )
+      }
+    } catch (emailError) {
+      console.error('Failed to send status update email:', emailError)
+      // Don't fail the update if email fails
+    }
+
+    // Log the action
+    await logAction(
+      request,
+      session.user.id,
+      AUDIT_ACTIONS.BOOKING_UPDATE,
+      'Booking',
+      booking.id,
+      {
+        oldStatus,
+        newStatus: validatedData.status,
+        oldPaymentStatus,
+        newPaymentStatus: validatedData.paymentStatus,
+      }
+    )
 
     return NextResponse.json(updatedBooking)
   } catch (error) {

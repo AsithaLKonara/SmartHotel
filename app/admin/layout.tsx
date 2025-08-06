@@ -33,6 +33,7 @@ const navigation = [
   { name: 'Calendar View', href: '/admin/calendar', icon: Calendar },
   { name: 'Check-in/Check-out', href: '/admin/dashboard/checkin-checkout', icon: ArrowRight },
   { name: 'Tasks', href: '/admin/tasks', icon: CheckSquare },
+  { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { name: 'Guests', href: '/admin/guests', icon: Users },
   { name: 'Staff', href: '/admin/staff', icon: Users },
   { name: 'Housekeeping', href: '/admin/housekeeping', icon: ClipboardList },

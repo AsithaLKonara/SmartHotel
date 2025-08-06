@@ -4,43 +4,16 @@ import { Calendar, MapPin, Star, Users, Wifi, Car, Utensils, Dumbbell } from 'lu
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import Navigation from '@/components/navigation'
+import StickyHeader from '@/components/sticky-header'
+import HeroSection from '@/components/hero-section'
 
 export default function HomePage() {
   return (
     <div className="min-h-screen">
-      <Navigation />
+      <StickyHeader />
+      
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center">
-        <Image
-          src="/images/hero-hotel.jpg"
-          alt="Luxury Hotel"
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 hero-gradient"></div>
-        <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-serif font-bold mb-6 text-shadow">
-            Welcome to SmartHotel
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 text-shadow">
-            Experience luxury, comfort, and exceptional service
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/booking">
-              <Button size="lg" className="btn-luxury text-lg px-8 py-3">
-                Book Your Stay
-              </Button>
-            </Link>
-            <Link href="/rooms">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-3 border-white text-white hover:bg-white hover:text-gray-900">
-                View Rooms
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Quick Booking Search */}
       <section className="py-16 bg-gray-50 dark:bg-gray-800">

@@ -15,13 +15,13 @@ export async function createAuditLog(data: AuditLogData) {
   try {
     await prisma.auditLog.create({
       data: {
-        userId: data.userId,
+        userId: data.userId || '',
         action: data.action,
-        resource: data.resource,
-        resourceId: data.resourceId,
-        details: data.details ? JSON.stringify(data.details) : null,
-        ipAddress: data.ipAddress,
-        userAgent: data.userAgent,
+        entityType: data.resource,
+        entityId: data.resourceId || '',
+        details: data.details || undefined,
+        ipAddress: data.ipAddress || undefined,
+        userAgent: data.userAgent || undefined,
       }
     })
   } catch (error) {
@@ -46,6 +46,11 @@ export const AUDIT_ACTIONS = {
   USER_REGISTER: 'USER_REGISTER',
   USER_UPDATE: 'USER_UPDATE',
   USER_DELETE: 'USER_DELETE',
+  
+  // Staff actions
+  STAFF_CREATE: 'STAFF_CREATE',
+  STAFF_UPDATE: 'STAFF_UPDATE',
+  STAFF_DELETE: 'STAFF_DELETE',
   
   // Room actions
   ROOM_CREATE: 'ROOM_CREATE',

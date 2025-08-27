@@ -8,8 +8,8 @@ import { logAction, AUDIT_ACTIONS } from '@/lib/audit'
 const taskSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  type: z.enum(['HOUSEKEEPING', 'MAINTENANCE', 'ROOM_SERVICE', 'CONCIERGE', 'OTHER']),
-  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']),
+  type: z.enum(['HOUSEKEEPING', 'MAINTENANCE', 'ROOM_SERVICE', 'GUEST_REQUEST', 'ADMINISTRATIVE']),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
   assignedTo: z.string().optional(),
   dueDate: z.string().optional(),
 })

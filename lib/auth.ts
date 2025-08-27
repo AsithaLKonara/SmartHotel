@@ -18,7 +18,9 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const user = await prisma.user.findUnique({ email: credentials.email })
+        const user = await prisma.user.findUnique({ 
+          where: { email: credentials.email } 
+        })
 
         if (!user) {
           return null
@@ -64,8 +66,7 @@ export const authOptions: NextAuthOptions = {
     }
   },
   pages: { 
-    signIn: '/auth/signin', 
-    signUp: '/auth/signup' 
+    signIn: '/auth/signin'
   },
   secret: process.env.NEXTAUTH_SECRET,
   cookies: {

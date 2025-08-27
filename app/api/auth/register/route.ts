@@ -8,7 +8,6 @@ const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   phone: z.string().optional(),
-  address: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -38,7 +37,6 @@ export async function POST(request: NextRequest) {
         email: validatedData.email,
         password: hashedPassword,
         phone: validatedData.phone,
-        address: validatedData.address,
         role: 'GUEST', // Default role for new registrations
       },
       select: {

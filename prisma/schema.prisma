@@ -124,6 +124,7 @@ model Task {
   priority    TaskPriority @default(MEDIUM)
   status      TaskStatus   @default(PENDING)
   assignedTo  String?
+  bookingId   String?
   dueDate     DateTime?
   completedAt DateTime?
   createdBy   String
@@ -260,4 +261,83 @@ enum GalleryCategory {
   EVENT
   FOOD
   EXTERIOR
+}
+
+// Restaurant Ordering System Models
+model FoodMenu {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  category    FoodCategory
+  image       String?
+  available   Boolean  @default(true)
+  preparationTime Int? // in minutes
+  hotelId     String?  // Added for multi-hotel support
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  orderItems OrderItem[]
+
+  @@map("food_menu")
+}
+
+model FoodOrder {
+  id          String        @id @default(cuid())
+  roomNumber  String        // Room number from booking
+  guestId     String        // Linked to booking user
+  bookingId   String?       // Optional: direct link to booking
+  status      OrderStatus   @default(PENDING)
+  totalAmount Float
+  specialRequests String?
+  deliveryTime DateTime?    // Expected delivery time
+  hotelId     String?       // Added for multi-hotel support
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  items      OrderItem[]
+  invoice    Invoice?       // Link to room billing
+
+  @@map("food_orders")
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  menuId    String
+  quantity  Int
+  unitPrice Float
+  notes     String?  // Guest special requests
+  hotelId   String?  // Added for multi-hotel support
+  createdAt DateTime @default(now())
+
+  // Relations
+  menu      FoodMenu  @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  order     FoodOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+// Restaurant Ordering Enums
+enum FoodCategory {
+  BREAKFAST
+  LUNCH
+  DINNER
+  BEVERAGES
+  DESSERTS
+  SNACKS
+  APPETIZERS
+  MAIN_COURSE
+  SIDES
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
 } 

@@ -17,7 +17,6 @@ async function main() {
       password: adminPassword,
       role: 'SUPER_ADMIN',
       phone: '+1234567890',
-      address: '123 Admin Street, City, Country',
     },
   })
 
@@ -32,7 +31,6 @@ async function main() {
       password: managerPassword,
       role: 'MANAGER',
       phone: '+1234567891',
-      address: '456 Manager Avenue, City, Country',
     },
   })
 
@@ -47,7 +45,6 @@ async function main() {
       password: receptionistPassword,
       role: 'RECEPTIONIST',
       phone: '+1234567892',
-      address: '789 Receptionist Blvd, City, Country',
     },
   })
 
@@ -62,7 +59,6 @@ async function main() {
       password: guestPassword,
       role: 'GUEST',
       phone: '+1234567893',
-      address: '321 Guest Lane, City, Country',
     },
   })
 
@@ -81,7 +77,7 @@ async function main() {
         images: ['/images/room-101-1.jpg', '/images/room-101-2.jpg'],
         floor: 1,
         size: 25,
-        isAvailable: true,
+        status: 'AVAILABLE',
       },
     }),
     prisma.room.upsert({
@@ -97,7 +93,7 @@ async function main() {
         images: ['/images/room-102-1.jpg', '/images/room-102-2.jpg'],
         floor: 1,
         size: 25,
-        isAvailable: true,
+        status: 'AVAILABLE',
       },
     }),
     prisma.room.upsert({
@@ -113,7 +109,7 @@ async function main() {
         images: ['/images/room-201-1.jpg', '/images/room-201-2.jpg'],
         floor: 2,
         size: 35,
-        isAvailable: true,
+        status: 'AVAILABLE',
       },
     }),
     prisma.room.upsert({
@@ -129,7 +125,7 @@ async function main() {
         images: ['/images/room-202-1.jpg', '/images/room-202-2.jpg'],
         floor: 2,
         size: 35,
-        isAvailable: true,
+        status: 'AVAILABLE',
       },
     }),
     prisma.room.upsert({
@@ -145,7 +141,7 @@ async function main() {
         images: ['/images/room-301-1.jpg', '/images/room-301-2.jpg'],
         floor: 3,
         size: 50,
-        isAvailable: true,
+        status: 'AVAILABLE',
       },
     }),
     prisma.room.upsert({
@@ -161,7 +157,7 @@ async function main() {
         images: ['/images/room-401-1.jpg', '/images/room-401-2.jpg'],
         floor: 4,
         size: 80,
-        isAvailable: true,
+        status: 'AVAILABLE',
       },
     }),
   ])
@@ -200,23 +196,31 @@ async function main() {
   // Create staff records
   await Promise.all([
     prisma.staff.upsert({
-      where: { userId: manager.id },
+      where: { employeeId: 'EMP001' },
       update: {},
       create: {
-        userId: manager.id,
+        employeeId: 'EMP001',
+        name: 'Manager User',
+        email: 'manager@smarthotel.com',
+        phone: '+1234567891',
         position: 'Hotel Manager',
-        shift: 'Day',
+        department: 'Management',
+        hireDate: new Date('2023-01-15'),
         salary: 5000.00,
         isActive: true,
       },
     }),
     prisma.staff.upsert({
-      where: { userId: receptionist.id },
+      where: { employeeId: 'EMP002' },
       update: {},
       create: {
-        userId: receptionist.id,
+        employeeId: 'EMP002',
+        name: 'Receptionist User',
+        email: 'receptionist@smarthotel.com',
+        phone: '+1234567892',
         position: 'Receptionist',
-        shift: 'Day',
+        department: 'Front Office',
+        hireDate: new Date('2023-02-01'),
         salary: 2500.00,
         isActive: true,
       },

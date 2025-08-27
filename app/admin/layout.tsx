@@ -24,7 +24,8 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
-  QrCode
+  QrCode,
+  UtensilsCrossed
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -40,6 +41,8 @@ const navigation = [
   { name: 'Check-in/Check-out', href: '/admin/dashboard/checkin-checkout', icon: ArrowRight, roles: ['SUPER_ADMIN', 'MANAGER', 'RECEPTIONIST'] },
   { name: 'Tasks', href: '/admin/tasks', icon: CheckSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
   { name: 'QR Codes', href: '/admin/qr-codes', icon: QrCode, roles: ['SUPER_ADMIN', 'MANAGER', 'RECEPTIONIST'] },
+  { name: 'Restaurant Menu', href: '/admin/menu', icon: UtensilsCrossed, roles: ['SUPER_ADMIN', 'MANAGER'] },
+  { name: 'Food Orders', href: '/admin/orders', icon: ClipboardList, roles: ['SUPER_ADMIN', 'MANAGER', 'RECEPTIONIST'] },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, roles: ['SUPER_ADMIN', 'MANAGER'] },
   { name: 'Guests', href: '/admin/guests', icon: Users, roles: ['SUPER_ADMIN', 'MANAGER', 'RECEPTIONIST'] },
   { name: 'Staff', href: '/admin/staff', icon: Users, roles: ['SUPER_ADMIN', 'MANAGER'] },

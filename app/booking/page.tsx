@@ -34,6 +34,38 @@ export default function BookingPage() {
   const [tax, setTax] = useState(0)
   const [finalTotal, setFinalTotal] = useState(0)
 
+  // Mock rooms data - replace with API call
+  const rooms = [
+    {
+      id: 1,
+      name: "Deluxe Suite",
+      type: "Suite",
+      price: 299,
+      image: "/images/room-deluxe.jpg"
+    },
+    {
+      id: 2,
+      name: "Executive Room",
+      type: "Deluxe",
+      price: 199,
+      image: "/images/room-executive.jpg"
+    },
+    {
+      id: 3,
+      name: "Presidential Suite",
+      type: "Presidential",
+      price: 599,
+      image: "/images/room-presidential.jpg"
+    },
+    {
+      id: 4,
+      name: "Standard Room",
+      type: "Standard",
+      price: 129,
+      image: "/images/room-standard.jpg"
+    }
+  ]
+
   // Check authentication
   useEffect(() => {
     if (status === 'loading') return
@@ -148,13 +180,6 @@ export default function BookingPage() {
     }
   }
 
-  // Mock rooms data - replace with API call
-  const rooms = [
-    { id: 1, name: 'Standard Room', price: 100, type: 'STANDARD' },
-    { id: 2, name: 'Deluxe Room', price: 150, type: 'DELUXE' },
-    { id: 3, name: 'Suite', price: 250, type: 'SUITE' },
-  ]
-
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -263,7 +288,7 @@ export default function BookingPage() {
                           className="input-field"
                           required
                         >
-                          <option value="">Choose a room...</option>
+                          <option value="">Select a room</option>
                           {rooms.map(room => (
                             <option key={room.id} value={room.id}>
                               {room.name} - {formatPrice(room.price)}/night
@@ -285,7 +310,7 @@ export default function BookingPage() {
                       <textarea
                         value={bookingData.specialRequests}
                         onChange={(e) => handleInputChange('specialRequests', e.target.value)}
-                        className="input-field min-h-[120px]"
+                        className="input-field min-h-[100px]"
                         placeholder="Any special requests or preferences..."
                       />
                     </div>
@@ -295,167 +320,35 @@ export default function BookingPage() {
                 {/* Step 3: Payment */}
                 {step === 3 && (
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-bold mb-6">Payment Options</h2>
+                    <h2 className="text-2xl font-bold mb-6">Payment</h2>
                     
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                        <input
-                          type="radio"
-                          id="pay_later"
-                          name="paymentMethod"
-                          value="pay_later"
-                          checked={bookingData.paymentMethod === 'pay_later'}
-                          onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                          className="w-4 h-4 text-primary-600"
-                        />
-                        <label htmlFor="pay_later" className="flex-1 cursor-pointer">
-                          <div className="font-medium">Pay Later</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            Pay at the hotel during check-in
-                          </div>
-                        </label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                        <input
-                          type="radio"
-                          id="pay_now"
-                          name="paymentMethod"
-                          value="pay_now"
-                          checked={bookingData.paymentMethod === 'pay_now'}
-                          onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                          className="w-4 h-4 text-primary-600"
-                        />
-                        <label htmlFor="pay_now" className="flex-1 cursor-pointer">
-                          <div className="font-medium">Pay Now</div>
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            Secure payment with credit card
-                          </div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Email</label>
-                        <input
-                          type="email"
-                          value={bookingData.guestDetails.email}
-                          onChange={(e) => handleGuestDetailsChange('email', e.target.value)}
-                          className="input-field"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium mb-2">Phone</label>
-                        <input
-                          type="tel"
-                          value={bookingData.guestDetails.phone}
-                          onChange={(e) => handleGuestDetailsChange('phone', e.target.value)}
-                          className="input-field"
-                          required
-                        />
-                      </div>
-                    </div>
-
                     <div>
-                      <label className="block text-sm font-medium mb-2">Address</label>
-                      <textarea
-                        value={bookingData.guestDetails.address}
-                        onChange={(e) => handleGuestDetailsChange('address', e.target.value)}
-                        className="input-field"
-                        rows={3}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Special Requests</label>
-                      <textarea
-                        value={bookingData.guestDetails.specialRequests}
-                        onChange={(e) => handleGuestDetailsChange('specialRequests', e.target.value)}
-                        className="input-field"
-                        rows={3}
-                        placeholder="Any special requests or preferences..."
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 3: Payment */}
-                {step === 3 && (
-                  <div className="space-y-6">
-                    <h2 className="text-2xl font-bold mb-6">Payment Method</h2>
-                    
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                        <input
-                          type="radio"
-                          id="card"
-                          name="paymentMethod"
-                          value="card"
-                          checked={bookingData.paymentMethod === 'card'}
-                          onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                        />
-                        <label htmlFor="card" className="flex items-center space-x-2 cursor-pointer">
-                          <CreditCard className="w-5 h-5" />
-                          <span>Credit/Debit Card</span>
-                        </label>
-                      </div>
-                      
-                      <div className="flex items-center space-x-3 p-4 border rounded-lg">
-                        <input
-                          type="radio"
-                          id="payLater"
-                          name="paymentMethod"
-                          value="payLater"
-                          checked={bookingData.paymentMethod === 'payLater'}
-                          onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
-                        />
-                        <label htmlFor="payLater" className="cursor-pointer">
-                          Pay at Hotel
-                        </label>
-                      </div>
-                    </div>
-
-                    {bookingData.paymentMethod === 'card' && (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">Card Number</label>
+                      <label className="block text-sm font-medium mb-2">Payment Method</label>
+                      <div className="space-y-3">
+                        <label className="flex items-center space-x-3">
                           <input
-                            type="text"
-                            placeholder="1234 5678 9012 3456"
-                            className="input-field"
-                            required
+                            type="radio"
+                            name="paymentMethod"
+                            value="pay_later"
+                            checked={bookingData.paymentMethod === 'pay_later'}
+                            onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
+                            className="text-primary-600"
                           />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-2">Expiry Date</label>
-                            <input
-                              type="text"
-                              placeholder="MM/YY"
-                              className="input-field"
-                              required
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium mb-2">CVV</label>
-                            <input
-                              type="text"
-                              placeholder="123"
-                              className="input-field"
-                              required
-                            />
-                          </div>
-                        </div>
+                          <span>Pay Later (at check-in)</span>
+                        </label>
+                        <label className="flex items-center space-x-3">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="pay_now"
+                            checked={bookingData.paymentMethod === 'pay_now'}
+                            onChange={(e) => handleInputChange('paymentMethod', e.target.value)}
+                            className="text-primary-600"
+                          />
+                          <span>Pay Now (secure online payment)</span>
+                        </label>
                       </div>
-                    )}
+                    </div>
                   </div>
                 )}
 
@@ -466,37 +359,26 @@ export default function BookingPage() {
                       type="button"
                       variant="outline"
                       onClick={() => setStep(step - 1)}
-                      disabled={isLoading}
                     >
                       Previous
                     </Button>
                   )}
-                  <div className="ml-auto">
-                    {step < 3 ? (
-                      <Button
-                        type="submit"
-                        disabled={!isStepValid() || isLoading}
-                        className="btn-primary"
-                      >
-                        Continue
-                      </Button>
+                  
+                  <Button
+                    type={step === 3 ? 'submit' : 'button'}
+                    onClick={step < 3 ? () => setStep(step + 1) : undefined}
+                    disabled={!isStepValid() || isLoading}
+                    className="ml-auto"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : step === 3 ? (
+                      <CreditCard className="w-4 h-4 mr-2" />
                     ) : (
-                      <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="btn-luxury"
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Processing...
-                          </>
-                        ) : (
-                          'Confirm Booking'
-                        )}
-                      </Button>
+                      <Calendar className="w-4 h-4 mr-2" />
                     )}
-                  </div>
+                    {step === 3 ? (isLoading ? 'Processing...' : 'Complete Booking') : 'Next'}
+                  </Button>
                 </div>
               </form>
             </Card>
@@ -504,73 +386,8 @@ export default function BookingPage() {
 
           {/* Booking Summary */}
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-24">
+            <Card className="p-6 sticky top-8">
               <h3 className="text-xl font-bold mb-4">Booking Summary</h3>
-              
-              {selectedRoom && (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">Room</span>
-                    <span>{selectedRoom.name}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">Check-in</span>
-                    <span>{bookingData.checkIn ? new Date(bookingData.checkIn).toLocaleDateString() : '-'}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">Check-out</span>
-                    <span>{bookingData.checkOut ? new Date(bookingData.checkOut).toLocaleDateString() : '-'}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">Nights</span>
-                    <span>{nights}</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">Guests</span>
-                    <span>{bookingData.guests}</span>
-                  </div>
-                  
-                  <hr className="my-4" />
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span>Room Rate</span>
-                      <span>{formatPrice(selectedRoom.price)}/night</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span>Subtotal</span>
-                      <span>{formatPrice(totalAmount)}</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span>Tax (10%)</span>
-                      <span>{formatPrice(tax)}</span>
-                    </div>
-                    
-                    <hr className="my-2" />
-                    
-                    <div className="flex justify-between items-center font-bold text-lg">
-                      <span>Total</span>
-                      <span>{formatPrice(finalTotal)}</span>
-                    </div>
-                  </div>
-                  
-                  {step === 3 && (
-                    <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Payment Method: <span className="font-medium capitalize">
-                          {bookingData.paymentMethod === 'pay_now' ? 'Pay Now' : 'Pay Later'}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
               
               {selectedRoom && (
                 <div className="space-y-4">
@@ -604,13 +421,39 @@ export default function BookingPage() {
                   </div>
 
                   <div className="border-t pt-4">
-                    <div className="flex justify-between text-lg font-semibold">
-                      <span>Total:</span>
-                      <span>{formatPrice(totalAmount)}</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span>Room Rate</span>
+                        <span>{formatPrice(selectedRoom.price)}/night</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span>Subtotal</span>
+                        <span>{formatPrice(totalAmount)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span>Tax (10%)</span>
+                        <span>{formatPrice(tax)}</span>
+                      </div>
+                      
+                      <hr className="my-2" />
+                      
+                      <div className="flex justify-between items-center font-bold text-lg">
+                        <span>Total</span>
+                        <span>{formatPrice(finalTotal)}</span>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                      Includes taxes and fees
-                    </p>
+                    
+                    {step === 3 && (
+                      <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Payment Method: <span className="font-medium capitalize">
+                            {bookingData.paymentMethod === 'pay_now' ? 'Pay Now' : 'Pay Later'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -620,35 +463,4 @@ export default function BookingPage() {
       </div>
     </div>
   )
-}
-
-const rooms = [
-  {
-    id: 1,
-    name: "Deluxe Suite",
-    type: "Suite",
-    price: 299,
-    image: "/images/room-deluxe.jpg"
-  },
-  {
-    id: 2,
-    name: "Executive Room",
-    type: "Deluxe",
-    price: 199,
-    image: "/images/room-executive.jpg"
-  },
-  {
-    id: 3,
-    name: "Presidential Suite",
-    type: "Presidential",
-    price: 599,
-    image: "/images/room-presidential.jpg"
-  },
-  {
-    id: 4,
-    name: "Standard Room",
-    type: "Standard",
-    price: 129,
-    image: "/images/room-standard.jpg"
-  }
-] 
+} 

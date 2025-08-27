@@ -81,7 +81,11 @@ export async function POST(request: NextRequest) {
     }
 
     const room = await prisma.room.create({
-      data: validatedData
+      data: {
+        ...validatedData,
+        floor: validatedData.floor || null,
+        size: validatedData.size || null,
+      }
     })
 
     return NextResponse.json(room, { status: 201 })

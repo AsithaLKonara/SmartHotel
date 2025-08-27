@@ -8,8 +8,8 @@ import { logAction, AUDIT_ACTIONS } from '@/lib/audit'
 const taskUpdateSchema = z.object({
   title: z.string().min(1, 'Title is required').optional(),
   description: z.string().optional(),
-  type: z.enum(['HOUSEKEEPING', 'MAINTENANCE', 'ROOM_SERVICE', 'CONCIERGE', 'OTHER']).optional(),
-  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(),
+  type: z.enum(['HOUSEKEEPING', 'MAINTENANCE', 'ROOM_SERVICE', 'GUEST_REQUEST', 'ADMINISTRATIVE']).optional(),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
   status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).optional(),
   assignedTo: z.string().optional(),
   dueDate: z.string().optional(),
@@ -101,6 +101,7 @@ export async function PUT(
       where: { id: params.id },
       data: {
         ...validatedData,
+        assignedTo: validatedData.assignedTo || null,
         dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : undefined,
         completedAt: validatedData.completedAt ? new Date(validatedData.completedAt) : undefined,
       },
@@ -186,6 +187,7 @@ export async function PATCH(
       where: { id: params.id },
       data: {
         ...validatedData,
+        assignedTo: validatedData.assignedTo || null,
         dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : undefined,
         completedAt: validatedData.completedAt ? new Date(validatedData.completedAt) : undefined,
       },
